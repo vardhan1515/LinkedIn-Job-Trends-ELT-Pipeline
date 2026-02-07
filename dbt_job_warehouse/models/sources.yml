@@ -1,0 +1,8 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: raw
+    tables:
+      - name: raw_job_postings
+        description: "Raw job postings ingested from daily CSV batches."

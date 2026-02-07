@@ -1,0 +1,120 @@
+version: 2
+
+models:
+  - name: stg_job_postings
+    description: "Cleaned and typed job postings from raw layer."
+    columns:
+      - name: job_id
+        tests: [not_null]
+      - name: title
+        tests: [not_null]
+      - name: company_name
+        tests: [not_null]
+      - name: posting_date
+        tests: [not_null]
+      - name: workplace_type
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['remote', 'hybrid', 'onsite', 'unknown']
+
+  - name: dim_company
+    description: "Company dimension."
+    columns:
+      - name: company_key
+        tests: [not_null, unique]
+
+  - name: dim_location
+    description: "Location dimension."
+    columns:
+      - name: location_key
+        tests: [not_null, unique]
+
+  - name: dim_role
+    description: "Role dimension based on title classification."
+    columns:
+      - name: role_key
+        tests: [not_null, unique]
+
+  - name: dim_date
+    description: "Date dimension derived from posting date."
+    columns:
+      - name: date_day
+        tests: [not_null, unique]
+
+  - name: dim_skill
+    description: "Skill dimension extracted from posting text."
+    columns:
+      - name: skill_key
+        tests: [not_null, unique]
+      - name: category
+        tests: [not_null]
+
+  - name: dim_skill_category
+    description: "Skill category dimension."
+    columns:
+      - name: category_key
+        tests: [not_null, unique]
+
+  - name: fact_job_postings
+    description: "Job postings fact table with links to dimensions."
+    columns:
+      - name: posting_id
+        tests: [not_null, unique]
+      - name: company_key
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_company')
+                field: company_key
+      - name: location_key
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_location')
+                field: location_key
+      - name: role_key
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_role')
+                field: role_key
+      - name: date_day
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_day
+
+  - name: fact_posting_skills
+    description: "Posting-to-skill fact table."
+    columns:
+      - name: posting_id
+        tests: [not_null]
+      - name: skill_key
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_skill')
+                field: skill_key
+      - name: category_key
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_skill_category')
+                field: category_key
+
+  - name: bridge_posting_skills
+    description: "Bridge table between postings and matched skills."
+
+  - name: mart_skill_demand_monthly
+    description: "Monthly counts of postings by skill."
+
+  - name: mart_role_trends_monthly
+    description: "Monthly posting counts by role."
+
+  - name: mart_remote_share_monthly
+    description: "Monthly share of remote postings by role."
+
+  - name: mart_top_companies_monthly
+    description: "Monthly posting counts by company."

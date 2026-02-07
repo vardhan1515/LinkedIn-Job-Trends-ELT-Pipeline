@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Job Market Intelligence - Dashboard</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Job Market Intelligence</p>
+          <h1>Hiring Signals from Job Postings</h1>
+          <p class="subtitle">Powered by your ELT warehouse: raw ? clean ? marts</p>
+        </div>
+        <div class="hero-actions">
+          <a class="btn" href="dbt-docs/index.html" target="_blank">Open dbt Docs</a>
+        </div>
+      </header>
+
+      <section class="grid">
+        <article class="card">
+          <h2>Top Skills (Latest Month)</h2>
+          <div id="skills"></div>
+        </article>
+        <article class="card">
+          <h2>Top Companies (Latest Month)</h2>
+          <div id="companies"></div>
+        </article>
+        <article class="card">
+          <h2>Role Trends (Latest Month)</h2>
+          <div id="roles"></div>
+        </article>
+        <article class="card">
+          <h2>Remote Share (Latest Month)</h2>
+          <div id="remote"></div>
+        </article>
+      </section>
+
+      <section class="notes">
+        <h3>What this shows</h3>
+        <p>These metrics come from the analytics marts built by dbt. The data refreshes when you run the pipeline.</p>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

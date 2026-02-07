@@ -1,0 +1,30 @@
+name: 'job_warehouse'
+version: '1.0.0'
+config-version: 2
+
+profile: 'job_warehouse'
+
+model-paths: ["models"]
+analysis-paths: ["analysis"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+models:
+  job_warehouse:
+    staging:
+      +schema: staging
+      +materialized: view
+    intermediate:
+      +schema: intermediate
+      +materialized: view
+    dims:
+      +schema: analytics
+      +materialized: table
+    facts:
+      +schema: analytics
+      +materialized: table
+    marts:
+      +schema: marts
+      +materialized: table
