@@ -12,3 +12,5 @@ __pycache__/
 .DS_Store
 .ipynb_checkpoints/
 data/source/postings.csv
+data/source/postings.csv
+data/daily/
