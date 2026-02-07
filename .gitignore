@@ -2,8 +2,6 @@ data/daily/
 dbt_job_warehouse/target/
 dbt_job_warehouse/logs/
 dbt_job_warehouse/.user.yml
-public/data/
-public/dbt-docs/
 __pycache__/
 *.pyc
 .env
