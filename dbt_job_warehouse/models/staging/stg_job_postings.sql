@@ -1,3 +1,5 @@
+{{ config(materialized='table') }}
+
 with source as (
     select *
     from {{ source('raw', 'raw_job_postings') }}
@@ -28,8 +30,14 @@ cleaned as (
         nullif(trim(application_type), '') as application_type,
         nullif(trim(sponsored), '') as sponsored,
         nullif(trim(remote_allowed), '') as remote_allowed,
-        nullif(trim(views), '')::int as views,
-        nullif(trim(applies), '')::int as applies,
+        case
+            when trim(views) ~ '^[0-9]+(\\.[0-9]+)?$' then trim(views)::numeric::int
+            else null
+        end as views,
+        case
+            when trim(applies) ~ '^[0-9]+(\\.[0-9]+)?$' then trim(applies)::numeric::int
+            else null
+        end as applies,
         nullif(trim(min_salary), '')::numeric as min_salary,
         nullif(trim(med_salary), '')::numeric as med_salary,
         nullif(trim(max_salary), '')::numeric as max_salary,

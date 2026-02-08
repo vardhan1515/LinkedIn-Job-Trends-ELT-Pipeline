@@ -1,22 +1,24 @@
+import os
+from sqlalchemy import create_engine, text
 
-  
-    
+host = os.getenv('DB_HOST', 'localhost')
+port = os.getenv('DB_PORT', '5432')
+user = os.getenv('DB_USER', 'postgres')
+password = os.getenv('DB_PASSWORD', 'postgres')
+database = os.getenv('DB_NAME', 'job_warehouse')
+url = f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{database}"
+engine = create_engine(url)
 
-  create  table "job_warehouse"."analytics_staging"."stg_job_postings__dbt_tmp"
-  
-  
-    as
-  
-  (
-    
-
+sql = """
+create schema if not exists analytics_staging;
+drop table if exists analytics_staging.stg_job_postings cascade;
+create table analytics_staging.stg_job_postings as
 with source as (
     select *
-    from "job_warehouse"."raw"."raw_job_postings"
+    from raw.raw_job_postings
     where coalesce(job_id, '') <> 'job_id'
       and coalesce(listed_time, '') <> 'listed_time'
 ),
-
 cleaned as (
     select
         nullif(trim(job_id), '') as job_id,
@@ -40,33 +42,20 @@ cleaned as (
         nullif(trim(application_type), '') as application_type,
         nullif(trim(sponsored), '') as sponsored,
         nullif(trim(remote_allowed), '') as remote_allowed,
-        nullif(trim(views), '')::int as views,
-        nullif(trim(applies), '')::int as applies,
+        case when trim(views) ~ '^[0-9]+(\\.[0-9]+)?$' then trim(views)::numeric::int else null end as views,
+        case when trim(applies) ~ '^[0-9]+(\\.[0-9]+)?$' then trim(applies)::numeric::int else null end as applies,
         nullif(trim(min_salary), '')::numeric as min_salary,
         nullif(trim(med_salary), '')::numeric as med_salary,
         nullif(trim(max_salary), '')::numeric as max_salary,
         nullif(trim(normalized_salary), '')::numeric as normalized_salary,
-        case
-            when trim(listed_time) ~ '^[0-9]+(\\.[0-9]+)?$' then trim(listed_time)::numeric::bigint
-            else null
-        end as listed_time_ms,
-        case
-            when trim(original_listed_time) ~ '^[0-9]+(\\.[0-9]+)?$' then trim(original_listed_time)::numeric::bigint
-            else null
-        end as original_listed_time_ms,
-        case
-            when trim(expiry) ~ '^[0-9]+(\\.[0-9]+)?$' then trim(expiry)::numeric::bigint
-            else null
-        end as expiry_ms,
-        case
-            when trim(closed_time) ~ '^[0-9]+(\\.[0-9]+)?$' then trim(closed_time)::numeric::bigint
-            else null
-        end as closed_time_ms,
+        case when trim(listed_time) ~ '^[0-9]+(\\.[0-9]+)?$' then trim(listed_time)::numeric::bigint else null end as listed_time_ms,
+        case when trim(original_listed_time) ~ '^[0-9]+(\\.[0-9]+)?$' then trim(original_listed_time)::numeric::bigint else null end as original_listed_time_ms,
+        case when trim(expiry) ~ '^[0-9]+(\\.[0-9]+)?$' then trim(expiry)::numeric::bigint else null end as expiry_ms,
+        case when trim(closed_time) ~ '^[0-9]+(\\.[0-9]+)?$' then trim(closed_time)::numeric::bigint else null end as closed_time_ms,
         load_date,
         ingested_at
     from source
 ),
-
 final as (
     select
         job_id,
@@ -116,16 +105,16 @@ final as (
       and title is not null
       and coalesce(listed_time_ms, original_listed_time_ms) is not null
 ),
-
 ranked as (
-    select
-        *,
-        row_number() over (partition by job_id order by listed_at desc nulls last, ingested_at desc) as rn
+    select *, row_number() over (partition by job_id order by listed_at desc nulls last, ingested_at desc) as rn
     from final
 )
+select * from ranked where rn = 1;
+"""
 
-select *
-from ranked
-where rn = 1
-  );
-  
+with engine.begin() as conn:
+    for stmt in sql.strip().split(';'):
+        if stmt.strip():
+            conn.execute(text(stmt))
+
+print('materialized analytics_staging.stg_job_postings')

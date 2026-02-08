@@ -2,10 +2,12 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $projectRoot = Resolve-Path (Join-Path $root '..')
 
+python (Join-Path $projectRoot 'scripts\\materialize_stg.py')
+
 $env:DBT_PROFILES_DIR = (Join-Path $projectRoot 'dbt_job_warehouse')
 Push-Location (Join-Path $projectRoot 'dbt_job_warehouse')
 try {
-  python -m dbt.cli.main build
+  python -m dbt.cli.main build --exclude stg_job_postings
   python -m dbt.cli.main docs generate
 } finally {
   Pop-Location

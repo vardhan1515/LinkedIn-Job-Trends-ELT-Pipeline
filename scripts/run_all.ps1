@@ -30,12 +30,13 @@ $csvPath = Join-Path $dailyDir ("$Date.csv")
 if (-not (Test-Path $csvPath)) { throw "Daily CSV not found: $csvPath" }
 
 python (Join-Path $projectRoot 'scripts\ingest_daily.py') --csv $csvPath --load-date $Date
+python (Join-Path $projectRoot 'scripts\materialize_stg.py')
 
 if (-not $SkipDbt) {
     $env:DBT_PROFILES_DIR = (Join-Path $projectRoot 'dbt_job_warehouse')
     Push-Location (Join-Path $projectRoot 'dbt_job_warehouse')
     try {
-        python -m dbt.cli.main build
+        python -m dbt.cli.main build --exclude stg_job_postings
         python -m dbt.cli.main docs generate
     } finally {
         Pop-Location
